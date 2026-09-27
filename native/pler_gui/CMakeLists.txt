@@ -15,6 +15,8 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+# X11-only on Linux CI/packages (avoids wayland-scanner dependency)
+set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(

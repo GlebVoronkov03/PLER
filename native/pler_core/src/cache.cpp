@@ -1,6 +1,7 @@
 #include "pler/cache.hpp"
 #include "pler/frame.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -30,7 +31,7 @@ std::string mesh_cache_key(const std::string& path) {
   if (ec) return {};
   auto ft = std::filesystem::last_write_time(path, ec);
   if (ec) return {};
-  auto ticks = ft.time_since_epoch().count();
+  auto ticks = static_cast<std::int64_t>(ft.time_since_epoch().count());
   std::ostringstream os;
   os << path << "|" << sz << "|" << ticks;
   return os.str();
