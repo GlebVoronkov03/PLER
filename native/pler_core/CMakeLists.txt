@@ -20,6 +20,7 @@ set(PLER_CORE_SOURCES
 )
 
 add_library(pler_core STATIC ${PLER_CORE_SOURCES})
+set_target_properties(pler_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(pler_core
   PUBLIC
