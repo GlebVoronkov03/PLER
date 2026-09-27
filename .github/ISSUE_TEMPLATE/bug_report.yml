@@ -1,0 +1,41 @@
+name: Bug report
+description: Report incorrect scores, crashes, or build failures
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue. Please run `pler --version` and `pler selftest` if possible.
+  - type: input
+    id: version
+    attributes:
+      label: PLER version
+      placeholder: "PLER 2.0.0  cuda=yes"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options: [Windows, Linux, macOS, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: Commands, mesh types, options (--rays, --align, …)
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / selftest output
+      render: shell

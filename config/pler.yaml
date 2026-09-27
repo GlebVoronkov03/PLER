@@ -1,0 +1,22 @@
+# PLER defaults (loaded by CLI/GUI if found)
+num_rays: 5000
+min_rays: 1000
+max_rays: 20000
+align_mode: off
+align_volume: false
+compute_tsi: false
+converge: false
+voxel_resolution: 48
+sphere_margin: 1.02
+prefer_cuda: true
+cache_dir: .pler_cache
+cache_enabled: true
+use_float32: false
+display_mm: false
+units_to_mm: 1.0
+dump_rays: false
+theme: 0
+icp_iterations: 30
+# Optional mix (omit or set negative to disable)
+# w_pler: 0.7
+# w_tsi: 0.3

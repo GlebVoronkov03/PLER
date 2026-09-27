@@ -1,0 +1,10 @@
+# PLER ignore (native subtree)
+
+build/
+_deps/
+.cache/
+*.user
+*.suo
+*.pdb
+*.ilk
+*.exp

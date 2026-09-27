@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an improvement or integration
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Metric / scoring
+        - CLI / GUI
+        - C ABI / packaging
+        - Docs
+        - Integrations (Blender, Unity, …)
+        - Other
+    validations:
+      required: true

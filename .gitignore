@@ -1,0 +1,52 @@
+# Build & caches
+native/build/
+dist/
+.pler_cache/
+pler_env/
+.cache/
+cmake-build-*/
+__pycache__/
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+*.suo
+*.sdf
+*.opensdf
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Compiled artifacts
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.exe
+*.so
+*.dylib
+*.a
+*.obj
+!samples/**/*.obj
+
+# Local / private mesh corpus (not for public git)
+models/**
+!models/README.md
+
+# Legacy Python research / experiments (not part of public 2.0 surface)
+*.py
+!pler_metric.py
+!pler_advanced.py
+*.png
+*.csv
+*.json
+pyproject.toml
+requirements.txt
+
+# Python envs
+.venv/
+venv/
+*.pyc
+*.log

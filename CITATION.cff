@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use PLER, please cite the following works."
+title: "PLER: Peak Length to Error Ratio"
+type: software
+authors:
+  - family-names: Voronkov
+    given-names: Gleb Alekseevich
+    email: glebvoronkov03@gmail.com
+license: MIT
+version: 2.0.0
+references:
+  - type: conference-paper
+    title: "PLER: A Novel Full-Reference Metric for Evaluating the Geometric Fidelity of 3D Assets"
+    authors:
+      - family-names: Voronkov
+        given-names: Gleb Alekseevich
+    year: 2026
+    month: 3
+    doi: 10.1109/IEEECONF68869.2026.11461193
+    conference:
+      name: "2026 Systems of Signals Generating and Processing in the Field of on Board Communications"
+  - type: conference-paper
+    title: "Research of Methods for Modeling User Assessments of 3D Content for Extended Reality Systems"
+    authors:
+      - family-names: Voronkov
+        given-names: Gleb Alekseevich
+    year: 2025
+    month: 3
+    doi: 10.1109/IEEECONF64229.2025.10948103
+    conference:
+      name: "2025 Systems of Signals Generating and Processing in the Field of on Board Communications"
