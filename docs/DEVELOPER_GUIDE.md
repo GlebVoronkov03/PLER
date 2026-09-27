@@ -357,7 +357,26 @@ Software version: **2.0.0** (`pler --version`). License: MIT.
 
 When citing behavior in publications, state ray count \(N\), align mode, backend (cpu/cuda), and mesh preprocessing. See root `CITATION.cff` / `README.md`.
 
-**Packaging:** `native/package.bat` builds `dist/pler-2.0-win64.zip` with CLI, GUI, `pler.dll`, `pler.h`, samples, docs, and CUDA `cudart` DLLs when the Toolkit is present.
+**Packaging:**
+
+- Windows: `native/package.bat` → `dist/pler-2.0-win64.zip` (CLI, GUI, `pler.dll`, `pler.h`, samples, docs, CUDA `cudart` DLLs when the Toolkit is present).
+- Linux / macOS: `native/package.sh --os linux|macos --arch x64|arm64 [--cuda]` → `.tar.gz` / `.zip` plus unsigned `.dmg` on macOS.
+- CUDA Linux (manual): build with `-DPLER_CUDA=ON` and `nvcc`, then `./package.sh --os linux --arch x64 --cuda` → `pler-2.0-linux-x64-cuda.tar.gz`. Example with Docker:
+
+```bash
+docker run --rm -v "$PWD:/src" -w /src/native nvidia/cuda:12.2.0-devel-ubuntu22.04 bash -c '
+  apt-get update && apt-get install -y build-essential cmake ninja-build \
+    libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev \
+    libxinerama-dev libxrandr-dev libxkbcommon-dev
+  cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    -DPLER_CUDA=ON -DPLER_BUILD_GUI=ON -DPLER_ASSIMP=OFF
+  cmake --build build --target pler pler_shared pler_gui
+  ./package.sh --os linux --arch x64 --cuda
+'
+gh release upload v2.0.0 dist/pler-2.0-linux-x64-cuda.tar.gz --clobber
+```
+
+CPU Linux/macOS/Windows packages are produced by GitHub Actions and attached to the `v2.0.0` Release on each push to `main`.
 ---
 
 ## Related docs

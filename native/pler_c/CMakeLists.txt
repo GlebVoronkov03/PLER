@@ -3,6 +3,19 @@ set_target_properties(pler_shared PROPERTIES
   OUTPUT_NAME pler
   WINDOWS_EXPORT_ALL_SYMBOLS OFF
 )
+if(APPLE)
+  set_target_properties(pler_shared PROPERTIES
+    INSTALL_RPATH "@loader_path"
+    BUILD_RPATH "@loader_path"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+elseif(UNIX)
+  set_target_properties(pler_shared PROPERTIES
+    INSTALL_RPATH "$ORIGIN"
+    BUILD_RPATH "$ORIGIN"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+endif()
 
 target_compile_definitions(pler_shared PRIVATE PLER_BUILD_SHARED)
 target_include_directories(pler_shared

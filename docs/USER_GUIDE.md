@@ -11,31 +11,32 @@ PLER (Peak Length to Error Ratio) compares a **reference** model with a **test**
 
 | Item                | Notes                              |
 | ------------------- | ---------------------------------- |
-| Windows 10/11 (x64) | Current release target             |
-| `pler.exe`          | Console / headless (`pler --version`) |
-| `pler_gui.exe`      | Optional windowed interface        |
-| `pler.dll` + `pler.h` | Optional C library for integrators |
-| Mesh files          | Prefer `samples\` for quick tests; **OBJ** / **STL** |
+| OS                  | Windows 10/11 (x64), Linux (x64), or macOS (arm64 / Intel) |
+| `pler` / `pler.exe` | Console / headless (`pler --version`) |
+| `pler_gui`          | Optional windowed interface        |
+| Shared lib + `pler.h` | Optional C library (`pler.dll` / `libpler.so` / `libpler.dylib`) |
+| Mesh files          | Prefer `samples/` for quick tests; **OBJ** / **STL** |
 
 
-GPU (optional): CUDA uses a **GPU BVH** (same reliability as CPU BVH). Without a GPU or if CUDA runtime DLLs are missing, PLER falls back to the **CPU BVH**.
+GPU (optional): CUDA uses a **GPU BVH** (same reliability as CPU BVH). Without a GPU or if CUDA runtime libraries are missing, PLER falls back to the **CPU BVH**. macOS packages are CPU-only and unsigned.
 
 Typical locations after a local build:
 
 ```text
-native\build\pler_cli\Release\pler.exe
-native\build\pler_gui\Release\pler_gui.exe
-native\build\pler_c\Release\pler.dll
+native/build/pler_cli/Release/pler.exe   (Windows)
+native/build/pler_cli/pler               (Linux / macOS)
+native/build/pler_gui/...
+native/build/pler_c/...
 ```
 
-Packaged zip (after `native\package.bat`):
+Packaged archive (after `native/package.bat` or `native/package.sh`):
 
 ```text
-dist\pler-2.0\bin\pler.exe
-dist\pler-2.0\samples\ref_unit_sphere.obj
+dist/pler-2.0/bin/pler
+dist/pler-2.0/samples/ref_unit_sphere.obj
 ```
 
-Add the bin folder to PATH, or run with the full path.
+Add the bin folder to PATH, or run with the full path. On macOS, if Gatekeeper blocks the download: `xattr -dr com.apple.quarantine .`
 
 ---
 

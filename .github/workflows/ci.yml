@@ -5,10 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   windows-cpu:
-    name: Windows CPU selftest
+    name: Windows CPU
     runs-on: windows-2022
     steps:
       - name: Checkout
@@ -30,3 +34,206 @@ jobs:
       - name: Sample pair
         working-directory: native/build/pler_cli/Release
         run: ./pler.exe ${{ github.workspace }}/samples/ref_unit_sphere.obj ${{ github.workspace }}/samples/test_unit_sphere_lod.obj --rays 1000 --cpu
+
+      - name: GUI smoke
+        working-directory: native/build/pler_gui/Release
+        run: |
+          if (-not (Test-Path .\pler_gui.exe)) { throw "pler_gui.exe missing" }
+          Get-Item .\pler_gui.exe | Format-List Name, Length
+
+      - name: Package
+        working-directory: native
+        run: .\package.bat
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pler-2.0-win64
+          path: dist/pler-2.0-win64.zip
+          if-no-files-found: error
+
+  linux-cpu:
+    name: Linux CPU
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake ninja-build xvfb \
+            libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev \
+            libxinerama-dev libxrandr-dev libxkbcommon-dev
+
+      - name: Configure (CPU only)
+        working-directory: native
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DPLER_CUDA=OFF -DPLER_BUILD_GUI=ON -DPLER_ASSIMP=OFF
+
+      - name: Build
+        working-directory: native
+        run: cmake --build build --target pler pler_shared pler_gui
+
+      - name: Selftest
+        working-directory: native/build/pler_cli
+        run: ./pler selftest
+
+      - name: Sample pair
+        working-directory: native/build/pler_cli
+        run: ./pler ${{ github.workspace }}/samples/ref_unit_sphere.obj ${{ github.workspace }}/samples/test_unit_sphere_lod.obj --rays 1000 --cpu
+
+      - name: GUI smoke
+        working-directory: native/build/pler_gui
+        run: |
+          test -x ./pler_gui
+          xvfb-run -a timeout 3 ./pler_gui || true
+          file ./pler_gui
+
+      - name: Package
+        working-directory: native
+        run: |
+          chmod +x ./package.sh
+          ./package.sh --os linux --arch x64
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pler-2.0-linux-x64
+          path: dist/pler-2.0-linux-x64.tar.gz
+          if-no-files-found: error
+
+  macos-arm64:
+    name: macOS arm64
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Configure (CPU only)
+        working-directory: native
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DPLER_CUDA=OFF -DPLER_BUILD_GUI=ON -DPLER_ASSIMP=OFF
+
+      - name: Build
+        working-directory: native
+        run: cmake --build build --target pler pler_shared pler_gui
+
+      - name: Selftest
+        working-directory: native/build/pler_cli
+        run: ./pler selftest
+
+      - name: Sample pair
+        working-directory: native/build/pler_cli
+        run: ./pler ${{ github.workspace }}/samples/ref_unit_sphere.obj ${{ github.workspace }}/samples/test_unit_sphere_lod.obj --rays 1000 --cpu
+
+      - name: GUI smoke
+        working-directory: native/build/pler_gui
+        run: |
+          test -x ./pler_gui
+          file ./pler_gui
+          lipo -archs ./pler_gui || true
+
+      - name: Package
+        working-directory: native
+        run: |
+          chmod +x ./package.sh
+          ./package.sh --os macos --arch arm64
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pler-2.0-macos-arm64
+          path: |
+            dist/pler-2.0-macos-arm64.zip
+            dist/pler-2.0-macos-arm64.dmg
+          if-no-files-found: error
+
+  macos-x64:
+    name: macOS x64
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Configure (CPU only, x86_64)
+        working-directory: native
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DPLER_CUDA=OFF -DPLER_BUILD_GUI=ON -DPLER_ASSIMP=OFF
+
+      - name: Build
+        working-directory: native
+        run: cmake --build build --target pler pler_shared pler_gui
+
+      - name: Selftest
+        working-directory: native/build/pler_cli
+        run: arch -x86_64 ./pler selftest
+
+      - name: Sample pair
+        working-directory: native/build/pler_cli
+        run: arch -x86_64 ./pler ${{ github.workspace }}/samples/ref_unit_sphere.obj ${{ github.workspace }}/samples/test_unit_sphere_lod.obj --rays 1000 --cpu
+
+      - name: GUI smoke
+        working-directory: native/build/pler_gui
+        run: |
+          test -x ./pler_gui
+          file ./pler_gui
+          lipo -archs ./pler_gui
+
+      - name: Package
+        working-directory: native
+        run: |
+          chmod +x ./package.sh
+          ./package.sh --os macos --arch x64
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pler-2.0-macos-x64
+          path: |
+            dist/pler-2.0-macos-x64.zip
+            dist/pler-2.0-macos-x64.dmg
+          if-no-files-found: error
+
+  publish-release-assets:
+    name: Publish v2.0.0 assets
+    needs: [windows-cpu, linux-cpu, macos-arm64, macos-x64]
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download all package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+
+      - name: Upload to GitHub Release v2.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ls -R packages
+          files=(
+            packages/pler-2.0-win64/pler-2.0-win64.zip
+            packages/pler-2.0-linux-x64/pler-2.0-linux-x64.tar.gz
+            packages/pler-2.0-macos-arm64/pler-2.0-macos-arm64.zip
+            packages/pler-2.0-macos-arm64/pler-2.0-macos-arm64.dmg
+            packages/pler-2.0-macos-x64/pler-2.0-macos-x64.zip
+            packages/pler-2.0-macos-x64/pler-2.0-macos-x64.dmg
+          )
+          for f in "${files[@]}"; do
+            test -f "$f"
+          done
+          gh release upload v2.0.0 "${files[@]}" --repo "${{ github.repository }}" --clobber

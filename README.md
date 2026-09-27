@@ -4,11 +4,20 @@ Full-reference geometric fidelity metric for 3D assets (**Peak Length to Error R
 
 **License:** [MIT](LICENSE) · **Author:** Gleb Alekseevich Voronkov · **Contact:** glebvoronkov03@gmail.com
 
-Native C++ engine · C ABI (`pler.dll` / `libpler.so`) · CLI · Dear ImGui GUI · optional CUDA (CPU is the reference path).
+Native C++ engine · C ABI (`pler.dll` / `libpler.so` / `libpler.dylib`) · CLI · Dear ImGui GUI · optional CUDA (CPU is the reference path).
 
-## Download for Windows
+## Download
 
-Get the latest binaries from **[Releases](https://github.com/GlebVoronkov03/PLER/releases)** (`pler-2.0-win64.zip`).
+Binaries: **[Releases](https://github.com/GlebVoronkov03/PLER/releases/tag/v2.0.0)**
+
+| Platform | Asset |
+|----------|--------|
+| **Windows** (x64) | `pler-2.0-win64.zip` |
+| **Linux** (x64) | `pler-2.0-linux-x64.tar.gz` (CPU) · optional `pler-2.0-linux-x64-cuda.tar.gz` |
+| **macOS** (Apple Silicon) | `pler-2.0-macos-arm64.zip` / `.dmg` (unsigned) |
+| **macOS** (Intel) | `pler-2.0-macos-x64.zip` / `.dmg` (unsigned) |
+
+**Windows**
 
 ```bat
 pler --version
@@ -17,13 +26,40 @@ pler samples\ref_unit_sphere.obj samples\test_unit_sphere_lod.obj --rays 2000
 pler gui
 ```
 
-The Windows zip may include the CUDA runtime. If no NVIDIA GPU / CUDA DLL is available, PLER falls back to the CPU BVH automatically. User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
+**Linux**
+
+```bash
+./bin/pler --version
+./bin/pler selftest
+./bin/pler samples/ref_unit_sphere.obj samples/test_unit_sphere_lod.obj --rays 2000
+./bin/pler_gui
+```
+
+**macOS** (unsigned — clear quarantine if Gatekeeper blocks)
+
+```bash
+xattr -dr com.apple.quarantine .
+./bin/pler --version
+./bin/pler selftest
+./bin/pler_gui
+```
+
+Windows and Linux CUDA packages may include the CUDA runtime. Without an NVIDIA GPU, PLER falls back to the CPU BVH. User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
 ## Build / embed
 
 ```bat
 cd native
 build.bat
+```
+
+Linux / macOS:
+
+```bash
+cd native
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLER_CUDA=OFF -DPLER_BUILD_GUI=ON
+cmake --build build --target pler pler_shared pler_gui
+./package.sh --os linux --arch x64   # or: --os macos --arch arm64|x64
 ```
 
 Requires CMake ≥ 3.20 and a C++17 compiler. CUDA Toolkit with `nvcc` enables the GPU path; without it the build is CPU-only.

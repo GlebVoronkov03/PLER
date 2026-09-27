@@ -5,6 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Unzip-and-run: find libpler next to the binaries
+if(NOT WIN32)
+  set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+  if(APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path")
+    set(CMAKE_BUILD_RPATH "@loader_path")
+  else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    set(CMAKE_BUILD_RPATH "$ORIGIN")
+  endif()
+endif()
+
 option(PLER_CUDA "Build CUDA ray-cast backend" ON)
 option(PLER_BUILD_GUI "Build Dear ImGui GUI" ON)
 option(PLER_ASSIMP "Use Assimp for extra mesh formats" ON)

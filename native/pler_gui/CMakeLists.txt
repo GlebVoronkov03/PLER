@@ -13,6 +13,8 @@ FetchContent_Declare(
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(
@@ -48,6 +50,20 @@ target_compile_definitions(pler_gui PRIVATE
   PLER_VERSION_PATCH=${PROJECT_VERSION_PATCH}
   PLER_VERSION_STRING="${PROJECT_VERSION}"
 )
+
+if(APPLE)
+  set_target_properties(pler_gui PROPERTIES
+    INSTALL_RPATH "@loader_path"
+    BUILD_RPATH "@loader_path"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+elseif(UNIX)
+  set_target_properties(pler_gui PROPERTIES
+    INSTALL_RPATH "$ORIGIN"
+    BUILD_RPATH "$ORIGIN"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+endif()
 
 if(WIN32)
   target_link_libraries(pler_gui PRIVATE opengl32 comdlg32 ole32 shell32)
