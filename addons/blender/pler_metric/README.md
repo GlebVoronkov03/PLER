@@ -8,6 +8,9 @@ Blender **3.6+ / 4.x** addon that shells out to a **bundled** `pler` CLI for ful
 2. Blender → Edit → Preferences → Add-ons → Install… → select the zip.
 3. Enable **PLER Mesh Quality**.
 4. Open the 3D View sidebar → **PLER** tab.
+<img width="1919" height="1023" alt="image" src="https://github.com/user-attachments/assets/74da0c2c-08dc-43d1-b837-d85e0e5f7ce7" />
+<img width="314" height="650" alt="image" src="https://github.com/user-attachments/assets/9869c9cd-1e28-4e05-8437-902260815c68" />
+
 
 ## Features
 
