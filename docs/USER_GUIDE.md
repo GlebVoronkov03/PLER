@@ -40,6 +40,18 @@ Add the bin folder to PATH, or run with the full path. On macOS, if Gatekeeper b
 
 ---
 
+## Blender addon
+
+Install **PLER Mesh Quality** from the Release asset `pler-blender-2.0.zip` (Edit → Preferences → Add-ons → Install). Open the 3D View sidebar → **PLER**.
+
+- Compare **files** or **selected mesh objects**
+- Batch a folder of `.obj` / `.stl` to CSV
+- Optional **Force CPU** and viewport **error overlay**
+
+See [addons/blender/pler_metric/README.md](../addons/blender/pler_metric/README.md).
+
+---
+
 ## Headless / CI
 
 Use the CLI only (no GUI window):

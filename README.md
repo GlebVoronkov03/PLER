@@ -46,6 +46,18 @@ xattr -dr com.apple.quarantine .
 
 Windows and Linux CUDA packages may include the CUDA runtime. Without an NVIDIA GPU, PLER falls back to the CPU BVH. User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
+## Screenshots
+
+![Single compare](docs/images/single_result.png)
+
+![Error histogram](docs/images/histogram.png)
+
+![Research table](docs/images/research_table.png)
+
+## Blender
+
+**PLER Mesh Quality** addon (Blender 3.6+ / 4.x): install [`pler-blender-2.0.zip`](https://github.com/GlebVoronkov03/PLER/releases/tag/v2.0.0) from the same Release. Bundles platform `pler` binaries; compare files or selected meshes, batch→CSV, Force CPU, error-sphere overlay. Details: [addons/blender/pler_metric/README.md](addons/blender/pler_metric/README.md).
+
 ## Build / embed
 
 ```bat

@@ -1,0 +1,21 @@
+schema_version = "1.0.0"
+
+id = "pler_metric"
+version = "2.0.0"
+name = "PLER Mesh Quality"
+tagline = "Full-reference geometric fidelity for triangle meshes (PLER)"
+maintainer = "Gleb Alekseevich Voronkov <glebvoronkov03@gmail.com>"
+type = "add-on"
+
+website = "https://github.com/GlebVoronkov03/PLER"
+tags = ["Geometry", "Mesh", "Pipeline"]
+
+blender_version_min = "3.6.0"
+
+license = ["SPDX:MIT"]
+copyright = ["2026 Gleb Alekseevich Voronkov"]
+
+platforms = ["windows-x64", "linux-x64", "macos-arm64", "macos-x64"]
+
+[permissions]
+files = "Read/write mesh exports and PLER cache under Blender temp"
