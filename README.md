@@ -46,6 +46,36 @@ xattr -dr com.apple.quarantine .
 
 Windows and Linux CUDA packages may include the CUDA runtime. Without an NVIDIA GPU, PLER falls back to the CPU BVH. User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
+## pip / npm
+
+```bash
+pip install pler-metric
+npm install pler-metric
+```
+
+**Python** (C ABI via ctypes):
+
+```python
+from pler_metric import options_init, compute_files, AlignMode
+
+opt = options_init()
+opt.num_rays = 2000
+r = compute_files("ref.obj", "test.obj", opt)
+print(r.pler_db, r.backend)
+```
+
+**Node** (N-API → `libpler`; natives downloaded on install from the Release):
+
+```js
+const pler = require("pler-metric");
+const opt = pler.optionsInit();
+opt.num_rays = 2000;
+const r = pler.computeFiles("ref.obj", "test.obj", opt);
+console.log(r.pler_db, r.backend);
+```
+
+Details: [bindings/python/README.md](bindings/python/README.md) · [bindings/node/README.md](bindings/node/README.md).
+
 ## Screenshots
 
 ![Single compare](docs/images/single_result.png)

@@ -52,6 +52,17 @@ See [addons/blender/pler_metric/README.md](../addons/blender/pler_metric/README.
 
 ---
 
+## Python / Node packages
+
+```bash
+pip install pler-metric
+npm install pler-metric
+```
+
+Both wrap the same native engine (Python via ctypes C ABI; Node via N-API + downloaded `libpler`). The `pler` CLI is also available from either install. See [bindings/python/README.md](../bindings/python/README.md) and [bindings/node/README.md](../bindings/node/README.md).
+
+---
+
 ## Headless / CI
 
 Use the CLI only (no GUI window):

@@ -377,6 +377,16 @@ gh release upload v2.0.0 dist/pler-2.0-linux-x64-cuda.tar.gz --clobber
 ```
 
 CPU Linux/macOS/Windows packages are produced by GitHub Actions and attached to the `v2.0.0` Release on each push to `main`.
+
+### Python / npm packages
+
+- Sources: [`bindings/python/`](../bindings/python/) (PyPI **`pler-metric`**) and [`bindings/node/`](../bindings/node/) (npm **`pler-metric`**), version **2.0.0** (no new git tag required).
+- Build wheels: `bindings/python/build_wheels.ps1` / `build_wheels.sh` (stages Release natives, prefers CUDA Linux asset when present).
+- Publish workflow: [`.github/workflows/publish-packages.yml`](../.github/workflows/publish-packages.yml) on `workflow_dispatch` / Release publish.
+- Required GitHub Actions secrets:
+  - **`PYPI_TOKEN`** — PyPI API token (`twine` password; username `__token__`)
+  - **`NPM_TOKEN`** — npm automation token for `npm publish`
+- After secrets are set, run **Actions → Publish packages → Run workflow** to upload wheels and the npm package.
 ---
 
 ## Related docs

@@ -1,0 +1,143 @@
+name: Publish packages
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  python-wheels:
+    name: Python wheel (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            platform: windows-x64
+          - os: ubuntu-22.04
+            platform: linux-x64
+          - os: macos-14
+            platform: macos-arm64
+          - os: macos-14
+            platform: macos-x64
+            cmake_arch: x86_64
+    env:
+      PLER_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            powershell -NoProfile -ExecutionPolicy Bypass -File bindings/python/build_wheels.ps1 -Platform "${PLER_PLATFORM}"
+          else
+            chmod +x bindings/python/build_wheels.sh
+            # For macos-x64 on arm runner, still stage macos-x64 Release asset into wheel
+            PLER_PLATFORM="${PLER_PLATFORM}" ./bindings/python/build_wheels.sh
+          fi
+      - name: Smoke import
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL=$(ls dist/wheels/*.whl | head -n1)
+          python -m pip install "$WHEEL"
+          python - <<'PY'
+          from pathlib import Path
+          import pler_metric
+          opt = pler_metric.options_init()
+          opt.num_rays = 1000
+          opt.prefer_cuda = False
+          root = Path(".")
+          r = pler_metric.compute_files(
+              str(root / "samples/ref_unit_sphere.obj"),
+              str(root / "samples/test_unit_sphere_lod.obj"),
+              opt,
+          )
+          assert r.ok, r.error
+          assert r.pler_db == r.pler_db  # finite
+          print("python smoke", r.pler_db, r.backend, pler_metric.version_string())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.platform }}
+          path: dist/wheels/*.whl
+          if-no-files-found: error
+
+  node-package:
+    name: Node package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-22.04, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: npm install + test
+        working-directory: bindings/node
+        run: |
+          npm install
+          npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: node-ok-${{ matrix.os }}
+          path: bindings/node/package.json
+          if-no-files-found: error
+
+  publish:
+    name: Publish PyPI + npm
+    needs: [python-wheels, node-package]
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: wheel-*
+          merge-multiple: true
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          set -euo pipefail
+          python -m pip install -q twine
+          ls -la artifacts
+          if [[ -z "${TWINE_PASSWORD:-}" ]]; then
+            echo "PYPI_TOKEN secret not set; cannot publish"
+            exit 1
+          fi
+          python -m twine upload artifacts/*.whl
+      - name: Publish to npm
+        working-directory: bindings/node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
+            echo "NPM_TOKEN secret not set; cannot publish"
+            exit 1
+          fi
+          # Publish sources only; consumers run postinstall to fetch natives
+          npm publish --access public --ignore-scripts

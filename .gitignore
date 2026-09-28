@@ -41,16 +41,24 @@ models/**
 !pler_metric.py
 !pler_advanced.py
 !addons/**/*.py
+!bindings/**/*.py
 *.png
 !docs/images/**/*.png
 *.csv
 *.json
 !addons/**/blender_manifest.toml
+!bindings/**/*.json
 pyproject.toml
+!bindings/python/pyproject.toml
 requirements.txt
 
-# Bundled addon natives (filled by package_addon.*)
+# Bundled addon / package natives (filled by package scripts / postinstall / wheel build)
 addons/blender/pler_metric/bin/
+bindings/python/pler_metric/_native/
+bindings/node/vendor/
+bindings/node/build/
+*.node
+node_modules/
 
 # Python envs
 .venv/

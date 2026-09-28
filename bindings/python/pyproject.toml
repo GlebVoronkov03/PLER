@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pler-metric"
+version = "2.0.0"
+description = "PLER: full-reference geometric fidelity metric for 3D meshes (C ABI + CLI)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Gleb Alekseevich Voronkov", email = "glebvoronkov03@gmail.com" }]
+requires-python = ">=3.9"
+keywords = ["3d", "mesh", "geometry", "quality", "pler"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+
+[project.urls]
+Homepage = "https://github.com/GlebVoronkov03/PLER"
+Documentation = "https://github.com/GlebVoronkov03/PLER/blob/main/bindings/python/README.md"
+Release = "https://github.com/GlebVoronkov03/PLER/releases/tag/v2.0.0"
+
+[project.scripts]
+pler = "pler_metric.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pler_metric*"]
+
+[tool.setuptools.package-data]
+pler_metric = ["_native/**/*"]

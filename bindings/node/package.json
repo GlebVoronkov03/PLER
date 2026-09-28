@@ -1,0 +1,47 @@
+{
+  "name": "pler-metric",
+  "version": "2.0.0",
+  "description": "PLER: full-reference geometric fidelity metric for 3D meshes (N-API + C ABI)",
+  "license": "MIT",
+  "author": "Gleb Alekseevich Voronkov <glebvoronkov03@gmail.com>",
+  "homepage": "https://github.com/GlebVoronkov03/PLER",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GlebVoronkov03/PLER.git",
+    "directory": "bindings/node"
+  },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "bin": {
+    "pler": "scripts/pler-cli.js"
+  },
+  "scripts": {
+    "install": "node scripts/install-native.js",
+    "postinstall": "node scripts/postinstall.js",
+    "test": "node test/smoke.js",
+    "build": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.3.0",
+    "node-gyp": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "binding.gyp",
+    "src/",
+    "lib/",
+    "scripts/",
+    "README.md"
+  ],
+  "keywords": [
+    "3d",
+    "mesh",
+    "geometry",
+    "quality",
+    "pler"
+  ]
+}
