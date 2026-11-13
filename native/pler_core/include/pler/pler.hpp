@@ -1,6 +1,9 @@
 #pragma once
 #include "pler/types.hpp"
 #include "pler/calibrate.hpp"
+#include "pler/frame.hpp"
+#include "pler/raycast.hpp"
+#include "pler/score.hpp"
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -31,6 +34,40 @@ PlerResult compute_pler(const std::string& ref_path,
                         const PlerOptions& opt,
                         ProgressFn progress = nullptr,
                         std::atomic<bool>* cancel = nullptr);
+
+/** Compare two in-memory meshes (copies are normalized internally). */
+PlerResult compute_pler_meshes(Mesh ref, Mesh test, const PlerOptions& opt,
+                               ProgressFn progress = nullptr,
+                               std::atomic<bool>* cancel = nullptr);
+
+/**
+ * Cached reference for repeated comparisons (optimizer loop).
+ * Frame + Fibonacci directions + reference ray lengths are fixed at create.
+ */
+class PlerReference {
+ public:
+  static PlerReference create(Mesh ref, const PlerOptions& opt,
+                              ProgressFn progress = nullptr,
+                              std::atomic<bool>* cancel = nullptr);
+
+  PlerResult compare(Mesh test, ProgressFn progress = nullptr,
+                     std::atomic<bool>* cancel = nullptr) const;
+
+  int num_rays() const { return num_rays_; }
+  const SphereFrame& world_sphere() const { return world_; }
+
+ private:
+  PlerOptions opt_{};
+  SphereFrame world_{};
+  Mesh ref_unit_{};
+  std::vector<Vec3> dirs_{};
+  LengthStats L_ref_{};
+  int num_rays_ = 0;
+  Backend backend_ = Backend::CPU;
+  TopologyFeatures topo_ref_{};
+  double tsi_placeholder_ = -1.0;
+  std::size_t vertex_count_ref_ = 0;
+};
 
 class JobRunner {
  public:

@@ -42,6 +42,7 @@ models/**
 !pler_advanced.py
 !addons/**/*.py
 !bindings/**/*.py
+!native/pler_c/tests/**/*.py
 *.png
 !docs/images/**/*.png
 *.csv

@@ -121,7 +121,8 @@ struct TopologyFeatures {
 };
 
 struct PlerResult {
-  double pler_db = 0;
+  double pler_db = 0;       // display value, capped at 100 dB
+  double pler_db_raw = 0;   // uncapped 10*log10(peak^2/mse); +inf if mse~0
   double mse = 0;
   double mean_error = 0;
   double max_error = 0;
