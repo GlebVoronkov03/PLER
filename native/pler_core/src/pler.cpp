@@ -39,9 +39,8 @@ int suggest_rays(std::size_t vertices, std::size_t triangles, int min_rays,
   return std::max(min_rays, std::min(max_rays, n));
 }
 
-PlerResult compute_pler(const std::string& ref_path, const std::string& test_path,
-                        const PlerOptions& opt, ProgressFn progress,
-                        std::atomic<bool>* cancel) {
+PlerResult compute_pler_meshes(Mesh ref, Mesh test, const PlerOptions& opt,
+                               ProgressFn progress, std::atomic<bool>* cancel) {
   auto report = [&](float p, const char* msg) {
     if (progress) progress(p, msg);
   };
@@ -50,9 +49,7 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
   PlerResult result;
 
   try {
-    report(0.02f, "Loading meshes");
-    Mesh ref = load_mesh(ref_path);
-    Mesh test = load_mesh(test_path);
+    if (ref.empty() || test.empty()) throw PlerError("empty mesh");
     result.vertex_count_ref = ref.vertex_count();
     result.vertex_count_test = test.vertex_count();
 
@@ -69,7 +66,6 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
       report(0.05f, "Adaptive rays");
     }
 
-    // Warn if over recommended (CLI/GUI can also check)
     MemoryInfo mem = query_memory();
     int rec = recommended_max_rays(mem);
     if (local.num_rays > rec) {
@@ -80,7 +76,8 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
 
     AlignMode am = resolve_align_mode(local);
     result.align_mode_used = align_mode_name(am);
-    result.align_volume_used = (am == AlignMode::VolumeIoU || am == AlignMode::IoUThenICP);
+    result.align_volume_used =
+        (am == AlignMode::VolumeIoU || am == AlignMode::IoUThenICP);
     if (am == AlignMode::VolumeIoU || am == AlignMode::IoUThenICP) {
       report(0.08f, "Volume IoU alignment");
       result.volume_iou = align_volume_iou(ref, test, local.voxel_resolution);
@@ -90,7 +87,6 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
       align_icp(ref, test, local.icp_iterations);
     }
 
-    // World radius before normalize (for mm display)
     SphereFrame world = make_shared_sphere(ref, test, local.sphere_margin);
     result.sphere_radius_world = world.radius;
 
@@ -216,7 +212,6 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
     result.computation_time_s =
         std::chrono::duration<double>(end - start).count();
     result.ok = true;
-    log_result(local.cache_dir, ref_path, test_path, result);
     report(1.0f, "Done");
     return result;
   } catch (const std::exception& ex) {
@@ -225,7 +220,141 @@ PlerResult compute_pler(const std::string& ref_path, const std::string& test_pat
     auto end = std::chrono::steady_clock::now();
     result.computation_time_s =
         std::chrono::duration<double>(end - start).count();
+    return result;
+  }
+}
+
+PlerResult compute_pler(const std::string& ref_path, const std::string& test_path,
+                        const PlerOptions& opt, ProgressFn progress,
+                        std::atomic<bool>* cancel) {
+  auto report = [&](float p, const char* msg) {
+    if (progress) progress(p, msg);
+  };
+  PlerResult result;
+  try {
+    report(0.02f, "Loading meshes");
+    Mesh ref = load_mesh(ref_path);
+    Mesh test = load_mesh(test_path);
+    result = compute_pler_meshes(std::move(ref), std::move(test), opt, progress,
+                                 cancel);
     log_result(opt.cache_dir, ref_path, test_path, result);
+    return result;
+  } catch (const std::exception& ex) {
+    result.ok = false;
+    result.error = ex.what();
+    log_result(opt.cache_dir, ref_path, test_path, result);
+    return result;
+  }
+}
+
+PlerReference PlerReference::create(Mesh ref, const PlerOptions& opt,
+                                    ProgressFn progress,
+                                    std::atomic<bool>* cancel) {
+  if (ref.empty()) throw PlerError("empty reference mesh");
+  auto report = [&](float p, const char* msg) {
+    if (progress) progress(p, msg);
+  };
+
+  PlerReference out;
+  out.opt_ = opt;
+  if (out.opt_.num_rays <= 0) {
+    out.opt_.num_rays = suggest_rays(ref.vertex_count(), ref.triangle_count(),
+                                     out.opt_.min_rays, out.opt_.max_rays);
+  }
+  out.num_rays_ = out.opt_.num_rays;
+  out.vertex_count_ref_ = ref.vertex_count();
+
+  report(0.05f, "Reference sphere");
+  out.world_ = make_reference_sphere(ref, out.opt_.sphere_margin);
+  out.ref_unit_ = std::move(ref);
+  normalize_into(out.ref_unit_, out.world_);
+  if (out.opt_.use_float32) quantize_mesh_f32(out.ref_unit_);
+
+  if (out.opt_.compute_tsi) {
+    report(0.1f, "Reference topology");
+    out.topo_ref_ = compute_topology(out.ref_unit_);
+  }
+
+  report(0.2f, "Reference rays");
+  out.dirs_ =
+      cached_fibonacci(out.num_rays_, out.opt_.cache_dir, out.opt_.cache_enabled);
+  auto rays = make_inward_rays(out.dirs_, /*R=*/1.0);
+  out.backend_ = select_backend(out.opt_.prefer_cuda);
+  if (cancel && cancel->load()) throw PlerError("cancelled");
+  auto th = cast_rays(out.ref_unit_, rays, out.backend_, cancel, [&](float f) {
+    report(0.2f + 0.7f * f, "Ray casting reference");
+  });
+  out.L_ref_ = hits_to_lengths(th, 1.0);
+  report(1.0f, "Reference ready");
+  return out;
+}
+
+PlerResult PlerReference::compare(Mesh test, ProgressFn progress,
+                                  std::atomic<bool>* cancel) const {
+  auto report = [&](float p, const char* msg) {
+    if (progress) progress(p, msg);
+  };
+  auto start = std::chrono::steady_clock::now();
+  PlerResult result;
+  try {
+    if (test.empty()) throw PlerError("empty test mesh");
+    result.vertex_count_ref = vertex_count_ref_;
+    result.vertex_count_test = test.vertex_count();
+    result.sphere_radius_world = world_.radius;
+    result.align_mode_used = "off";
+    result.num_rays = num_rays_;
+
+    report(0.1f, "Normalize test into reference sphere");
+    normalize_into(test, world_);
+    if (opt_.use_float32) {
+      // local copy already; mutate test
+      for (auto& v : test.vertices) {
+        v.x = static_cast<double>(static_cast<float>(v.x));
+        v.y = static_cast<double>(static_cast<float>(v.y));
+        v.z = static_cast<double>(static_cast<float>(v.z));
+      }
+    }
+
+    TopologyFeatures topo_test{};
+    double tsi_v = -1.0;
+    if (opt_.compute_tsi) {
+      topo_test = compute_topology(test);
+      tsi_v = topological_similarity(topo_ref_, topo_test);
+    }
+
+    report(0.3f, "Ray casting test");
+    auto rays = make_inward_rays(dirs_, 1.0);
+    auto th = cast_rays(test, rays, backend_, cancel, [&](float f) {
+      report(0.3f + 0.5f * f, "Ray casting test");
+    });
+    if (cancel && cancel->load()) throw PlerError("cancelled");
+    auto Ltest = hits_to_lengths(th, 1.0);
+    result = score_pler(L_ref_, Ltest, 1.0, num_rays_);
+    result.backend = (backend_ == Backend::CUDA) ? "cuda" : "cpu";
+    result.vertex_count_ref = vertex_count_ref_;
+    result.vertex_count_test = test.vertex_count();
+    result.sphere_radius_world = world_.radius;
+    result.align_mode_used = "off";
+    result.topo_ref = topo_ref_;
+    result.topo_test = topo_test;
+    result.tsi = tsi_v;
+    if (opt_.keep_lengths || opt_.dump_rays) {
+      result.L_ref = L_ref_.L;
+      result.L_test = std::move(Ltest.L);
+      result.ray_dirs = dirs_;
+    }
+    auto end = std::chrono::steady_clock::now();
+    result.computation_time_s =
+        std::chrono::duration<double>(end - start).count();
+    result.ok = true;
+    report(1.0f, "Done");
+    return result;
+  } catch (const std::exception& ex) {
+    result.ok = false;
+    result.error = ex.what();
+    auto end = std::chrono::steady_clock::now();
+    result.computation_time_s =
+        std::chrono::duration<double>(end - start).count();
     return result;
   }
 }

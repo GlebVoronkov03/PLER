@@ -48,12 +48,15 @@ PlerResult score_pler(const LengthStats& ref, const LengthStats& test, double R,
   r.miss_rate_ref = static_cast<double>(ref.miss_count) / static_cast<double>(n);
   r.miss_rate_test = static_cast<double>(test.miss_count) / static_cast<double>(n);
 
-  if (mse <= 1e-10) {
+  double peak2 = peak * peak;
+  if (peak2 <= 1e-30) peak2 = 1e-30;
+  if (mse <= 1e-30) {
+    r.pler_db_raw = std::numeric_limits<double>::infinity();
     r.pler_db = 100.0;
   } else {
-    double peak2 = peak * peak;
-    if (peak2 <= 1e-30) peak2 = 1e-30;
-    r.pler_db = 10.0 * std::log10(peak2 / mse);
+    r.pler_db_raw = 10.0 * std::log10(peak2 / mse);
+    // Display cap (ABI contract since v2.0): never report > 100 dB.
+    r.pler_db = std::min(100.0, r.pler_db_raw);
   }
   return r;
 }

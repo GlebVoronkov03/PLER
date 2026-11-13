@@ -14,6 +14,15 @@ SphereFrame make_shared_sphere(const Mesh& ref, const Mesh& test, double margin)
  */
 SphereFrame normalize_pair(Mesh& ref, Mesh& test, double margin);
 
+/** Shared sphere from a single reference mesh (+ margin). */
+SphereFrame make_reference_sphere(const Mesh& ref, double margin);
+
+/**
+ * Normalize mesh into a precomputed world sphere so the sphere becomes unit.
+ * Modifies mesh in place. Returns the unit frame {0, R=1}.
+ */
+SphereFrame normalize_into(Mesh& mesh, const SphereFrame& world);
+
 /** Fibonacci (golden) unit directions, equal-area lattice. */
 std::vector<Vec3> fibonacci_directions(int n);
 

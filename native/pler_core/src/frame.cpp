@@ -34,13 +34,25 @@ SphereFrame make_shared_sphere(const Mesh& ref, const Mesh& test, double margin)
 }
 
 SphereFrame normalize_pair(Mesh& ref, Mesh& test, double margin) {
-  SphereFrame frame = make_shared_sphere(ref, test, margin);
-  const double inv = 1.0 / frame.radius;
-  for (auto& v : ref.vertices) v = (v - frame.center) * inv;
-  for (auto& v : test.vertices) v = (v - frame.center) * inv;
-  frame.center = {0, 0, 0};
-  frame.radius = 1.0;
-  return frame;
+  SphereFrame world = make_shared_sphere(ref, test, margin);
+  normalize_into(ref, world);
+  normalize_into(test, world);
+  return {{0, 0, 0}, 1.0};
+}
+
+SphereFrame make_reference_sphere(const Mesh& ref, double margin) {
+  Vec3 center = mesh_centroid(ref);
+  double r = max_radius_from(ref, center);
+  if (r <= 1e-15) throw PlerError("Degenerate mesh extent");
+  if (margin < 1.0) margin = 1.0;
+  return {center, r * margin};
+}
+
+SphereFrame normalize_into(Mesh& mesh, const SphereFrame& world) {
+  if (world.radius <= 1e-15) throw PlerError("Degenerate sphere radius");
+  const double inv = 1.0 / world.radius;
+  for (auto& v : mesh.vertices) v = (v - world.center) * inv;
+  return {{0, 0, 0}, 1.0};
 }
 
 std::vector<Vec3> fibonacci_directions(int n) {
